@@ -4,7 +4,7 @@ const config: ExternalPluginConfig = {
     name: 'windy-plugin-dew-detector',
     version: '0.0.1',
     title: 'Dew Detector',
-    icon: '⛰️',
+    icon: '💧',
     description: 'Forcast the chances of dew formation based on my model.',
     author: 'Matteo Limauge',
     repository: 'https://github.com/malimaug/DewDetector',
