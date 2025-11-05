@@ -1,39 +1,44 @@
 <div class="plugin__mobile-header">
-    { title }
+    {title}
 </div>
 <section class="plugin__content">
     <div
         class="plugin__title plugin__title--chevron-back"
-        on:click={ () => bcast.emit('rqstOpen', 'menu') }
+        on:click={() => bcast.emit('rqstOpen', 'menu')}
     >
-    { title }
+        {title}
     </div>
-    Put your plugin code here
+
+    <h2 class="mb-10">Foehn Chart</h2>
+    <p>In the Foehn chart, the pressure difference between Lugano and Zurich is represented.</p>
+    <Chart
+        pointTop={locations.Lugano}
+        pointBottom={locations.Zurich}
+        nameOfThisPlugin={name}
+    />
 </section>
+
 <script lang="ts">
-    import bcast from "@windy/broadcast";
-    import { onDestroy, onMount } from 'svelte';
+    import bcast from '@windy/broadcast';
 
     import config from './pluginConfig';
 
-    const { title } = config;
+    import Chart from './Chart.svelte';
 
+    import type { LatLon } from '@windy/interfaces.d';
 
-    export const onopen = (_params: unknown) => {
-        // Your plugin was opened with parameters parsed from URL
-        // or with LatLon object if opened from contextmenu
+    const { title, name } = config;
+
+    type Location = 'Grands Malades' | 'Beez' | 'Awirs' | 'Dave' | 'Freyr';
+
+    const locations: Record<Location, LatLon> = {
+        Lugano: { lat: 46.003678, lon: 8.951052 },
+        Zurich: { lat: 47.376887, lon: 8.541694 },
     };
-
-    onMount(() => {
-        // Your plugin was mounted
-    });
-
-    onDestroy(() => {
-        // Your plugin was destroyed
-    });
 </script>
 
 <style lang="less">
-    // Put any LESS of CSS styles here
+    p {
+        line-height: 1.8;
+    }
 </style>
-
