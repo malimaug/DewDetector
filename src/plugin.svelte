@@ -9,11 +9,10 @@
         {title}
     </div>
 
-    <h2 class="mb-10">Foehn Chart</h2>
-    <p>In the Foehn chart, the pressure difference between Lugano and Zurich is represented.</p>
+    <h2 class="mb-10">Beez - Δt°</h2>
+    <p>The difference between the temperature and the dew point for Beez.</p>
     <Chart
-        pointTop={locations.Lugano}
-        pointBottom={locations.Zurich}
+        point={locations.Beez}
         nameOfThisPlugin={name}
     />
 </section>
@@ -29,11 +28,16 @@
 
     const { title, name } = config;
 
-    type Location = 'Grands Malades' | 'Beez' | 'Awirs' | 'Dave' | 'Freyr';
+    type Location = 'Grands Malades' | 'Beez' | 'Awirs' | 'Dave' | 'Freyr' | 'Yvoir' | 'Pont-à-Lesse' | 'Pepinster';
 
     const locations: Record<Location, LatLon> = {
-        Lugano: { lat: 46.003678, lon: 8.951052 },
-        Zurich: { lat: 47.376887, lon: 8.541694 },
+        Beez: { lat: 50.480, lon: 4.940 },
+        'Grands Malades': { lat: 50.480, lon: 4.940 },
+        Awirs: { lat: 50.480, lon: 4.940 },
+        Dave: { lat: 50.480, lon: 4.940 },
+        Freyr: { lat: 50.480, lon: 4.940 },
+        Yvoir: { lat: 50.480, lon: 4.940 },
+
     };
 </script>
 
