@@ -18,7 +18,7 @@
 
     let svgEl: SVGSVGElement;
 
-    type TSValue = { ts: Timestamp; diff: number };
+    type TSValue = { ts: Timestamp; diff: number; hum: number };
 
     $: {
         if (point) {
@@ -47,16 +47,16 @@
      * different arrays
      */
     const calculateDeltaDewTemp = (
-        { temp: real_temp, dewPoint: dew_temp, ts: ts }: DataHash,
+        { temp: real_temp, dewPoint: dew_temp, rh: humidity, ts: ts }: DataHash,
     ): TSValue[] => {
         const tsValues: TSValue[] = ts.map((ts, i) => {
-                return { ts, diff: (real_temp[i] - dew_temp[i])};
+                return { ts, diff: (real_temp[i] - dew_temp[i]), hum: (humidity[i]/10)};
         });
         return tsValues;
     };
 
     const drawTheGraph = (lineData: TSValue[], midnights: Timestamp[]) => {
-        const importantValues = [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10];
+        const importantValues = [-4, -2, 0, 2, 4, 6, 8, 10];
         const noons: Timestamp[] = midnights.map(ts => ts + 12 * 3600 * 1000);
 
         const startingTimestamp = lineData[0].ts;
@@ -76,12 +76,17 @@
 
         const xScale = d3.scaleTime().domain([startingTimestamp, lastTimestamp]).range([0, width]);
 
-        const yScale = d3.scaleLinear().domain([-10, 10]).range([height, 0]);
+        const yScale = d3.scaleLinear().domain([-4, 10]).range([height, 0]);
 
-        const line = d3
+        const line1 = d3
             .line<TSValue>()
             .x(d => xScale(d.ts))
             .y(d => yScale(d.diff));
+
+        const line2 = d3
+            .line<TSValue>()
+            .x(d => xScale(d.ts))
+            .y(d => yScale(d.hum));
 
         const xAxis = d3.axisBottom(xScale).tickValues(noons).tickFormat(d3.timeFormat('%a %d'));
 
@@ -143,14 +148,23 @@
                 .text('Wet');
         }
 
-        // Main pressure difference line
+        // Main temperature difference line
         innerSvg
             .append('path')
             .datum(lineData)
             .attr('fill', 'none')
             .attr('stroke', 'orange')
             .attr('stroke-width', 3)
-            .attr('d', line);
+            .attr('d', line1);
+
+        // Main humidity line
+        innerSvg
+            .append('path')
+            .datum(lineData)
+            .attr('fill', 'none')
+            .attr('stroke', 'lightblue')
+            .attr('stroke-width', 3)
+            .attr('d', line2);
 
         // X axis
         innerSvg
