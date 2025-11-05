@@ -11,30 +11,26 @@
     import type { Timestamp, YearMonthDay } from '@windy/types.d';
     import type { HttpPayload } from '@windy/http.d';
 
-    export let pointTop: LatLon;
-    export let pointBottom: LatLon;
+    export let point: LatLon;
     export let nameOfThisPlugin: string;
 
-    export let topText: string | undefined = undefined;
-    export let bottomText: string | undefined = undefined;
+    export let indicator: boolean;
 
     let svgEl: SVGSVGElement;
 
     type TSValue = { ts: Timestamp; diff: number };
 
     $: {
-        if (pointTop && pointBottom) {
-            const pointTopPromise = getPointForecastData('ecmwf', pointTop, nameOfThisPlugin);
-            const pointBottomPromise = getPointForecastData('ecmwf', pointBottom, nameOfThisPlugin);
+        if (point) {
+            const pointPromise = getPointForecastData('arome', point, nameOfThisPlugin);
 
-            Promise.all([pointTopPromise, pointBottomPromise]).then(
-                ([{ data: top }, { data: bottom }]: HttpPayload<
+            Promise.all([pointPromise]).then(
+                ([{data: point}]: HttpPayload<
                     WeatherDataPayload<DataHash>
                 >[]) => {
-                    const topData = top.data;
-                    const bottomData = bottom.data;
-                    const tsValues = calculatePressureDifference(topData, bottomData);
-                    const midnights = getAllMidnights(top.summary);
+                    const pointData = point.data;
+                    const tsValues = calculateDeltaDewTemp(pointData);
+                    const midnights = getAllMidnights(point.summary);
                     drawTheGraph(tsValues, midnights);
                 },
             );
@@ -50,24 +46,17 @@
      * the same timestamps, but in edge case (when each will be from different reference time) they can have
      * different arrays
      */
-    const calculatePressureDifference = (
-        { pressure: p1, ts: ts1 }: DataHash,
-        { pressure: p2, ts: ts2 }: DataHash,
+    const calculateDeltaDewTemp = (
+        { temp: real_temp, dewPoint: dew_temp, ts: ts }: DataHash,
     ): TSValue[] => {
-        const tsValues: TSValue[] = ts1.map((ts, i) => {
-            const i2 = ts2.indexOf(ts);
-            if (i2 === -1) {
-                return { ts, diff: 0 };
-            } else {
-                return { ts, diff: (p1[i] - p2[i2]) / 100 };
-            }
+        const tsValues: TSValue[] = ts.map((ts, i) => {
+                return { ts, diff: (real_temp[i] - dew_temp[i])};
         });
-
         return tsValues;
     };
 
     const drawTheGraph = (lineData: TSValue[], midnights: Timestamp[]) => {
-        const importantValues = [-12, -8, -4, 0, 4, 8, 12];
+        const importantValues = [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10];
         const noons: Timestamp[] = midnights.map(ts => ts + 12 * 3600 * 1000);
 
         const startingTimestamp = lineData[0].ts;
@@ -87,7 +76,7 @@
 
         const xScale = d3.scaleTime().domain([startingTimestamp, lastTimestamp]).range([0, width]);
 
-        const yScale = d3.scaleLinear().domain([-12, 12]).range([height, 0]);
+        const yScale = d3.scaleLinear().domain([-10, 10]).range([height, 0]);
 
         const line = d3
             .line<TSValue>()
@@ -99,7 +88,7 @@
         const yAxis = d3
             .axisLeft(yScale)
             .tickValues(importantValues)
-            .tickFormat(d => `${d} hPa`);
+            .tickFormat(d => `${d} t°`);
 
         // Draw horizontal lines for each important value
         importantValues.forEach(value => {
@@ -129,8 +118,8 @@
                     .attr('stroke-dasharray', '5,5');
             });
 
-        // Add text to the top right corner
-        if (topText) {
+        // Add text indicators for data
+        if (indicator == true) {
             innerSvg
                 .append('text')
                 .attr('x', width - textMargin)
@@ -140,11 +129,8 @@
                 .attr('font-size', '30px')
                 .attr('opacity', 0.5)
                 .attr('fill', 'white')
-                .text(topText);
-        }
+                .text('Dry');
 
-        // Add text to the bottom right corner
-        if (bottomText) {
             innerSvg
                 .append('text')
                 .attr('x', width - textMargin)
@@ -154,7 +140,7 @@
                 .attr('font-size', '30px')
                 .attr('opacity', 0.5)
                 .attr('fill', 'white')
-                .text(bottomText);
+                .text('Wet');
         }
 
         // Main pressure difference line
@@ -182,6 +168,6 @@
 <style lang="less">
     svg {
         width: 100%;
-        height: 200px;
+        height: 300px;
     }
 </style>

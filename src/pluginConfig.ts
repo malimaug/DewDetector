@@ -12,6 +12,7 @@ const config: ExternalPluginConfig = {
     mobileUI: 'fullscreen',
     routerPath: '/dew-detector',
     desktopWidth: 800,
+    private: true
 };
 
 export default config;
